@@ -1,0 +1,57 @@
+/* Add to existing style.css */
+
+.puzzle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 5px;
+    background-color: #333;
+    border: 5px solid #333;
+    width: 310px; /* (100px * 3) + (5px * 2) */
+    margin: 20px auto;
+    padding: 0;
+}
+
+.puzzle-tile {
+    width: 100px;
+    height: 100px;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.puzzle-tile.empty {
+    background-color: #555;
+    background-image: none;
+    cursor: default;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+#win-message {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.btn-solve {
+    background-color: #007bff;
+}
+.btn-solve:hover {
+    background-color: #0069d9;
+}
+#status-message {
+    margin-top: 20px;
+    text-align: center;
+}

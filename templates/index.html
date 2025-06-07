@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Puzzle Game - Upload Image</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Create Your 8-Puzzle</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('upload_image') }}" enctype="multipart/form-data" id="uploadForm">
+            <div class="form-group">
+                <label for="image_file">Choose an image (png, jpg, gif):</label>
+                <input type="file" name="image_file" id="image_file" accept="image/png, image/jpeg, image/gif" required>
+            </div>
+            
+            <div class="image-preview-container" id="imagePreviewContainer">
+                <img src="#" alt="Image Preview" id="imagePreview" class="image-preview__image">
+                <span class="image-preview__default-text">Image Preview</span>
+            </div>
+            
+            <button type="submit" class="btn">Upload and Start Puzzle</button>
+        </form>
+
+        {% if uploaded_filename %}
+            <div class="upload-success">
+                <h3>Last Uploaded Image:</h3>
+                <p>{{ uploaded_filename }}</p>
+                <img src="{{ url_for('static', filename='../' + uploaded_filepath) }}" alt="Uploaded Image {{ uploaded_filename }}" style="max-width: 200px; margin-top: 10px;">
+                <p><a href="{{ url_for('static', filename='../' + uploaded_filepath) }}" target="_blank">View full image</a></p>
+                </div>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+</html>

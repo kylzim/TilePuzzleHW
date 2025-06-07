@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-Puzzle Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>8-Puzzle Challenge</h1>
+        <p>Use your <strong>arrow keys</strong> to move the tiles into the correct order.</p>
+
+        <div id="puzzle-container">
+            <div id="puzzle-grid" class="puzzle-grid">
+                </div>
+        </div>
+
+        <div class="controls">
+            <button id="shuffle-button" class="btn">Shuffle</button>
+            <button id="solve-button" class="btn btn-solve">Solve with A*</button>
+            <a href="{{ url_for('upload_image') }}" class="btn btn-secondary">Upload New Image</a>
+        </div>
+        
+        <div id="status-message" class="flash info" style="display:none;"></div>
+
+        <div id="win-message" class="flash success" style="display:none;">
+            Congratulations! You solved the puzzle!
+        </div>
+
+    <script>
+        // This block is processed by Flask's Jinja2 engine.
+        // It creates a global object that our external JS file can safely access.
+        window.PUZZLE_CONFIG = {
+            TILE_MAP: {{ tile_map | tojson }},
+            GOAL_STATE: [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/puzzle.js') }}"></script>
+
+
+
+    </body>
+
+    
+</html>
