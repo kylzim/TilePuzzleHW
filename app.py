@@ -5,7 +5,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from werkzeug.utils import secure_filename
 from utils.image_processor import slice_image
 from puzzle_solver.board import Board
-from puzzle_solver.algorithms import a_star_solve
+from puzzle_solver.algorithms import a_star_solve, bfs_solve, dfs_solve
+
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
@@ -139,19 +140,31 @@ def solve_puzzle():
     if not puzzle_id or puzzle_id not in puzzle_boards:
         return jsonify({'error': 'No active puzzle found'}), 404
     
-    board = puzzle_boards[puzzle_id]
+    data = request.get_json()
+    algorithm = data.get('algorithm', 'a_star') # Default to a_star if not specified
     
-    # Run the A* algorithm
-    solution_path = a_star_solve(board)
+    board = puzzle_boards[puzzle_id]
+    solution_path = None
+    
+    # Call the appropriate solver based on the request
+    if algorithm == 'bfs':
+        solution_path = bfs_solve(board)
+    elif algorithm == 'dfs':
+        # You can adjust the depth limit here if needed
+        solution_path = dfs_solve(board, depth_limit=30) 
+    else: # Default to A*
+        solution_path = a_star_solve(board)
     
     if solution_path:
-        return jsonify({'solution': solution_path})
+        # Include the number of steps in the response for comparison
+        return jsonify({'solution': solution_path, 'steps': len(solution_path) - 1})
     else:
-        # This will be triggered if the is_solvable() check fails
-        return jsonify({'error': 'Puzzle is not solvable or no solution found.'}), 400
-
-
-
-
+        error_message = f"No solution found with {algorithm.upper()}"
+        if algorithm == 'dfs':
+            error_message += " within the depth limit."
+        elif not board.is_solvable():
+             error_message = "This puzzle configuration is not solvable."
+        
+        return jsonify({'error': error_message}), 400
 if __name__ == '__main__':
     app.run(debug=True)

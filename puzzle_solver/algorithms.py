@@ -1,6 +1,7 @@
 # puzzle_solver/algorithms.py
 
 import heapq
+from collections import deque
 
 class Node:
     """A node in the search tree for the A* algorithm."""
@@ -32,6 +33,29 @@ class Node:
     # The __lt__ method is necessary for the heapq to compare nodes
     def __lt__(self, other):
         return self.f_cost < other.f_cost
+
+def _reconstruct_path(node):
+    """Helper function to trace back from the goal node to the start."""
+    path = []
+    while node:
+        path.append(node.state)
+        node = node.parent
+    return path[::-1] # Return reversed path (from start to goal)
+
+def _get_neighbors(state, board_class):
+    """Helper function to generate valid neighboring states."""
+    neighbors = []
+    temp_board = board_class()
+    
+    for move_dir in ['up', 'down', 'left', 'right']:
+        # Create a copy of the state to modify for each potential move
+        neighbor_state = [row[:] for row in state]
+        temp_board.state = neighbor_state
+        
+        if temp_board.move(move_dir):
+            neighbors.append(temp_board.state)
+            
+    return neighbors
 
 def a_star_solve(initial_board):
     """
@@ -102,3 +126,73 @@ def a_star_solve(initial_board):
                     heapq.heappush(open_set, neighbor_node)
     
     return None # Should not be reached for a solvable puzzle
+
+def bfs_solve(initial_board):
+    """Finds the optimal solution using Breadth-First Search (BFS)."""
+    if not initial_board.is_solvable():
+        return None
+
+    start_node = Node(state=initial_board.state)
+    goal_state_tuple = tuple(map(tuple, initial_board.goal_state))
+
+    # BFS uses a FIFO queue
+    queue = deque([start_node])
+    visited = {tuple(map(tuple, start_node.state))}
+
+    while queue:
+        current_node = queue.popleft()
+
+        if tuple(map(tuple, current_node.state)) == goal_state_tuple:
+            return _reconstruct_path(current_node)
+
+        for neighbor_state in _get_neighbors(current_node.state, type(initial_board)):
+            neighbor_state_tuple = tuple(map(tuple, neighbor_state))
+            
+            if neighbor_state_tuple not in visited:
+                visited.add(neighbor_state_tuple)
+                neighbor_node = Node(state=neighbor_state, parent=current_node)
+                queue.append(neighbor_node)
+    
+    return None
+
+# --- NEW DFS IMPLEMENTATION ---
+def dfs_solve(initial_board, depth_limit=30):
+    """
+    Finds a solution using Depth-First Search (DFS) with a depth limit.
+    Note: DFS does not guarantee the shortest path.
+    """
+    if not initial_board.is_solvable():
+        return None
+
+    start_node = Node(state=initial_board.state)
+    goal_state_tuple = tuple(map(tuple, initial_board.goal_state))
+
+    # DFS uses a LIFO stack
+    stack = [start_node]
+    visited = set()
+
+    while stack:
+        current_node = stack.pop()
+        current_state_tuple = tuple(map(tuple, current_node.state))
+
+        if current_state_tuple == goal_state_tuple:
+            return _reconstruct_path(current_node)
+
+        # We add to visited only when we pop, to allow revisiting nodes on different paths
+        visited.add(current_state_tuple)
+
+        # Check depth limit
+        if current_node.g_cost < depth_limit:
+            # Note: We reverse neighbors to explore in a more standard order (e.g., up, down, left, right)
+            # because we are using a stack. This is an optional refinement.
+            for neighbor_state in reversed(_get_neighbors(current_node.state, type(initial_board))):
+                neighbor_state_tuple = tuple(map(tuple, neighbor_state))
+                if neighbor_state_tuple not in visited:
+                    neighbor_node = Node(
+                        state=neighbor_state,
+                        parent=current_node,
+                        g_cost=current_node.g_cost + 1
+                    )
+                    stack.append(neighbor_node)
+
+    return None

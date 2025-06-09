@@ -4,17 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Access the configuration data passed from the HTML template
     const { TILE_MAP, GOAL_STATE } = window.PUZZLE_CONFIG;
 
+    // Element selectors
     const puzzleGrid = document.getElementById('puzzle-grid');
     const shuffleButton = document.getElementById('shuffle-button');
     const winMessage = document.getElementById('win-message');
-    const solveButton = document.getElementById('solve-button');
     const statusMessage = document.getElementById('status-message');
+    
+    // Correctly select all three solver buttons
+    const aStarButton = document.getElementById('a-star-button');
+    const bfsButton = document.getElementById('bfs-button');
+    const dfsButton = document.getElementById('dfs-button');
     
     let currentGameState = null;
 
     function renderBoard(state) {
-        puzzleGrid.innerHTML = ''; // Clear the grid
-        currentGameState = state; // Update global state
+        puzzleGrid.innerHTML = '';
+        currentGameState = state;
         winMessage.style.display = 'none';
 
         state.flat().forEach(tileValue => {
@@ -24,17 +29,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tileValue === 0) {
                 tile.classList.add('empty');
             } else {
-                // The URL from the tile_map should be relative to the static folder root
-                const tileImageUrl = TILE_MAP[tileValue]; 
+                const tileImageUrl = TILE_MAP[tileValue];
                 if (tileImageUrl) {
-                    // Correctly form the URL for the background image
                     tile.style.backgroundImage = `url(/static/${tileImageUrl})`;
                 }
             }
             puzzleGrid.appendChild(tile);
         });
 
-        // Check for win condition
         if (JSON.stringify(state) === JSON.stringify(GOAL_STATE)) {
             winMessage.style.display = 'block';
         }
@@ -45,25 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ...
 
     async function shuffleBoard() {
+        hideStatus();
         try {
-            const response = await fetch('/api/shuffle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
+            const response = await fetch('/api/shuffle', { method: 'POST' });
             if (!response.ok) throw new Error('Failed to shuffle');
             const data = await response.json();
             renderBoard(data.gameState);
         } catch (error) {
             console.error('Shuffle error:', error);
-            alert('Could not shuffle the board. Please try again.');
+            showStatus('Could not shuffle the board.', 'error');
         }
     }
 
     async function handleKeyPress(e) {
-        // This function doesn't need any changes.
         const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         if (!validKeys.includes(e.key) || JSON.stringify(currentGameState) === JSON.stringify(GOAL_STATE)) {
-            return; // Also stop moves if the puzzle is already solved
+            return;
         }
         e.preventDefault();
 
@@ -86,7 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setControlsEnabled(enabled) {
         shuffleButton.disabled = !enabled;
-        solveButton.disabled = !enabled;
+        // CORRECTED: Disable/enable all three solver buttons
+        aStarButton.disabled = !enabled;
+        bfsButton.disabled = !enabled;
+        dfsButton.disabled = !enabled;
+        
         if (enabled) {
             document.addEventListener('keydown', handleKeyPress);
         } else {
@@ -104,42 +107,43 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.style.display = 'none';
     }
 
-    function animateSolution(path) {
+    function animateSolution(path, algorithm) {
         let step = 0;
+        const totalSteps = path.length - 1;
+        showStatus(`Solution found with ${algorithm} in ${totalSteps} steps. Playing animation...`);
+
         const interval = setInterval(() => {
             if (step < path.length) {
-                showStatus(`Solving... Step ${step + 1} of ${path.length}`);
                 renderBoard(path[step]);
                 step++;
             } else {
                 clearInterval(interval);
-                hideStatus();
-                // The final board state will trigger the win message in renderBoard
                 setControlsEnabled(true);
             }
-        }, 500); // 500ms delay between steps
+        }, 400);
     }
 
-    async function solveBoard() {
+    async function solveBoard(algorithm) {
         setControlsEnabled(false);
-        showStatus('Solving... Please wait. This may take a moment.');
+        const algoName = algorithm.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        showStatus(`Solving with ${algoName}... Please wait.`);
         winMessage.style.display = 'none';
 
         try {
             const response = await fetch('/api/solve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ algorithm: algorithm })
             });
 
             const data = await response.json();
 
             if (response.ok && data.solution) {
-                animateSolution(data.solution);
+                animateSolution(data.solution, algoName);
             } else {
                 showStatus(data.error || 'Failed to find a solution.', 'error');
                 setControlsEnabled(true);
             }
-
         } catch (error) {
             console.error('Solve error:', error);
             showStatus('An error occurred while contacting the server.', 'error');
@@ -147,12 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    shuffleButton.addEventListener('click', () => {
-        hideStatus();
-        shuffleBoard();
-    });
-    solveButton.addEventListener('click', solveBoard); // Add new listener
-    
+    shuffleButton.addEventListener('click', shuffleBoard);
+    aStarButton.addEventListener('click', () => solveBoard('a_star'));
+    bfsButton.addEventListener('click', () => solveBoard('bfs'));
+    dfsButton.addEventListener('click', () => solveBoard('dfs'));
     document.addEventListener('keydown', handleKeyPress);
 
     // Initial shuffle to start the game
