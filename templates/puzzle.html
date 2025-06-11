@@ -31,8 +31,8 @@
         </div>
 
     <script>
-        // This block is processed by Flask's Jinja2 engine.
-        // It creates a global object that our external JS file can safely access.
+        // this block is processed by Flask's Jinja2 engine
+        // it creates a global object that external JS file can safely access
         window.PUZZLE_CONFIG = {
             TILE_MAP: {{ tile_map | tojson }},
             GOAL_STATE: [[1, 2, 3], [4, 5, 6], [7, 8, 0]]

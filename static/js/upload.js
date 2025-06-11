@@ -13,18 +13,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 imagePreviewDefaultText.style.display = 'none';
                 imagePreview.style.display = 'block';
-                imagePreviewContainer.style.borderColor = 'transparent'; // Optional: remove border on preview
+                imagePreviewContainer.style.borderColor = 'transparent'; // remove border on preview
 
                 reader.onload = function (e) {
                     imagePreview.setAttribute('src', e.target.result);
                 }
-                reader.readAsDataURL(file); // Reads the file as a data URL
+                reader.readAsDataURL(file); // reads the file as a data url
             } else {
-                // No file selected or selection cancelled
+                // no file selected or selection cancelled
                 imagePreview.style.display = 'none';
                 imagePreviewDefaultText.style.display = 'block';
                 imagePreview.setAttribute('src', '#');
-                imagePreviewContainer.style.borderColor = '#ddd'; // Optional: restore border
+                imagePreviewContainer.style.borderColor = '#ddd'; // restore border
             }
         });
     }

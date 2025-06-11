@@ -1,16 +1,14 @@
-// static/js/puzzle.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    // Access the configuration data passed from the HTML template
+    // access the configuration data passed from the HTML template
     const { TILE_MAP, GOAL_STATE } = window.PUZZLE_CONFIG;
 
-    // Element selectors
+    // element selectors
     const puzzleGrid = document.getElementById('puzzle-grid');
     const shuffleButton = document.getElementById('shuffle-button');
     const winMessage = document.getElementById('win-message');
     const statusMessage = document.getElementById('status-message');
     
-    // Correctly select all three solver buttons
+    // all three solver buttons
     const aStarButton = document.getElementById('a-star-button');
     const bfsButton = document.getElementById('bfs-button');
     const dfsButton = document.getElementById('dfs-button');
@@ -42,10 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // The rest of your functions (shuffleBoard, handleKeyPress) remain exactly the same.
-    // ...
-    // ...
-
     async function shuffleBoard() {
         hideStatus();
         try {
@@ -62,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleKeyPress(e) {
         const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
         if (!validKeys.includes(e.key) || JSON.stringify(currentGameState) === JSON.stringify(GOAL_STATE)) {
-            return;
+            return; // also stop moves if the puzzle is already solved
         }
         e.preventDefault();
 
@@ -85,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setControlsEnabled(enabled) {
         shuffleButton.disabled = !enabled;
-        // CORRECTED: Disable/enable all three solver buttons
         aStarButton.disabled = !enabled;
         bfsButton.disabled = !enabled;
         dfsButton.disabled = !enabled;
@@ -133,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/solve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // sends the chosen algorithm to the backend
                 body: JSON.stringify({ algorithm: algorithm })
             });
 
@@ -144,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus(data.error || 'Failed to find a solution.', 'error');
                 setControlsEnabled(true);
             }
+
         } catch (error) {
             console.error('Solve error:', error);
             showStatus('An error occurred while contacting the server.', 'error');
@@ -151,12 +146,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    shuffleButton.addEventListener('click', shuffleBoard);
+    shuffleButton.addEventListener('click', () => {
+        hideStatus();
+        shuffleBoard();
+    });
+    
+    // listeners for each solve button
     aStarButton.addEventListener('click', () => solveBoard('a_star'));
     bfsButton.addEventListener('click', () => solveBoard('bfs'));
     dfsButton.addEventListener('click', () => solveBoard('dfs'));
+    
     document.addEventListener('keydown', handleKeyPress);
 
-    // Initial shuffle to start the game
+    // initial shuffle
     shuffleBoard();
 });

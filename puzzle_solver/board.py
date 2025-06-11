@@ -1,12 +1,10 @@
-# puzzle_solver/board.py
-
 import random
 
 class Board:
     def __init__(self):
         # 0 represents the blank space
         self.goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
-        self.state = [row[:] for row in self.goal_state] # Start with solved state
+        self.state = [row[:] for row in self.goal_state] # start with solved state
 
     def find_blank(self):
         """Finds the (row, col) coordinates of the blank tile (0)."""
@@ -24,7 +22,7 @@ class Board:
         """
         blank_r, blank_c = self.find_blank()
         
-        # Determine the target tile to swap with
+        # determine the target tile to swap with
         target_r, target_c = blank_r, blank_c
         if direction == 'up':
             target_r += 1
@@ -35,11 +33,11 @@ class Board:
         elif direction == 'right':
             target_c -= 1
         else:
-            return False # Invalid direction
+            return False # bad direction
 
-        # Check if the target is within the board boundaries
+        # check if the target is within the board boundaries
         if 0 <= target_r < 3 and 0 <= target_c < 3:
-            # Swap the blank tile with the target tile
+            # swap the blank tile with the target tile
             self.state[blank_r][blank_c], self.state[target_r][target_c] = \
                 self.state[target_r][target_c], self.state[blank_r][blank_c]
             return True
@@ -51,7 +49,7 @@ class Board:
         Shuffles the board by making a number of random, valid moves.
         This ensures the puzzle is always solvable.
         """
-        self.state = [row[:] for row in self.goal_state] # Start from solved state
+        self.state = [row[:] for row in self.goal_state] # start from solved state
         directions = ['up', 'down', 'left', 'right']
         for _ in range(moves):
             random_move = random.choice(directions)
@@ -63,7 +61,7 @@ class Board:
         For an N x N grid (where N=3), a puzzle is solvable if the
         number of inversions is even.
         """
-        # Flatten the 2D list into a 1D list, ignoring the blank space (0)
+        # flatten the 2D list into a 1D list, ignoring the blank space (0)
         flat_list = [num for row in self.state for num in row if num != 0]
         inversions = 0
         for i in range(len(flat_list)):
@@ -71,5 +69,5 @@ class Board:
                 if flat_list[i] > flat_list[j]:
                     inversions += 1
         
-        # For a 3x3 grid, the puzzle is solvable if the inversion count is even
+        # for a 3x3 grid, the puzzle is solvable if the inversion count is even
         return inversions % 2 == 0

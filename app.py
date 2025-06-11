@@ -1,5 +1,3 @@
-# app.py
-
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from werkzeug.utils import secure_filename
@@ -8,7 +6,7 @@ from puzzle_solver.board import Board
 from puzzle_solver.algorithms import a_star_solve, bfs_solve, dfs_solve
 
 
-# Configuration
+# config
 UPLOAD_FOLDER = 'uploads'
 TILES_FOLDER = 'static/tiles'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -21,8 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# This dictionary will act as our simple in-memory session storage for puzzle states
-# In a real app, you might use Flask-Session with a proper backend
+# dictionary is in-memory session storage for puzzle states
 puzzle_boards = {}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -47,23 +44,22 @@ def upload_image():
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(image_path)
             
-            # --- New Logic ---
-            # Create a unique directory for this image's tiles
+            # create a unique directory for this image's tiles
             image_name_without_ext = os.path.splitext(filename)[0]
             tile_dir = os.path.join(TILES_FOLDER, image_name_without_ext)
             
-            # Slice the image and get tile paths
+            # slice the image and get tile paths
             tile_paths = slice_image(image_path, tile_dir)
             
             if tile_paths is None:
                 flash('Could not process the image. Please try another one.', 'error')
                 return redirect(request.url)
             
-            # Create a new Board instance for this session/image
+            # create a new Board instance for this session/image
             board = Board()
             puzzle_boards[filename] = board
             
-            # Store tile mapping in session. Keys are tile numbers (1-8).
+            # store tile mapping in session with keys being tile numbers (1-8)
             session['tile_map'] = {i + 1: path for i, path in enumerate(tile_paths)}
             session['current_puzzle_id'] = filename
 
@@ -118,9 +114,7 @@ def move_tile():
     if not direction:
         return jsonify({'error': 'Move direction not provided'}), 400
         
-   # --- THIS IS THE MODIFIED LOGIC ---
-    # We now map the arrow keys directly to the direction of the blank's movement.
-    # 'ArrowUp' from the browser now means the blank moves 'up'.
+    # keyboard directions to move tiles
     move_map = {
         'ArrowUp': 'up',
         'ArrowDown': 'down',
@@ -141,22 +135,22 @@ def solve_puzzle():
         return jsonify({'error': 'No active puzzle found'}), 404
     
     data = request.get_json()
-    algorithm = data.get('algorithm', 'a_star') # Default to a_star if not specified
+    algorithm = data.get('algorithm', 'a_star') # default to a_star
     
     board = puzzle_boards[puzzle_id]
     solution_path = None
     
-    # Call the appropriate solver based on the request
+    # use the appropriate solver based on the request
     if algorithm == 'bfs':
         solution_path = bfs_solve(board)
     elif algorithm == 'dfs':
-        # You can adjust the depth limit here if needed
+        # depth limit is set to 30 
         solution_path = dfs_solve(board, depth_limit=30) 
-    else: # Default to A*
+    else: # default to A*
         solution_path = a_star_solve(board)
     
     if solution_path:
-        # Include the number of steps in the response for comparison
+        # prints the number of steps in the response for comparison
         return jsonify({'solution': solution_path, 'steps': len(solution_path) - 1})
     else:
         error_message = f"No solution found with {algorithm.upper()}"

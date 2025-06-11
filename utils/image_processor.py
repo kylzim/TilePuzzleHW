@@ -1,5 +1,3 @@
-# utils/image_processor.py
-
 import os
 from PIL import Image
 
@@ -22,8 +20,6 @@ def slice_image(image_path, output_dir, rows=3, cols=3):
         print(f"Error opening image: {e}")
         return None
 
-    # For simplicity, resize to a square to make tiles square
-    # A 300x300 image gives 100x100 tiles, which is a good size.
     img = img.resize((300, 300))
     width, height = img.size
     tile_width = width // cols
@@ -31,15 +27,15 @@ def slice_image(image_path, output_dir, rows=3, cols=3):
     
     tile_paths = []
     
-    # Ensure the output directory exists
+    # make sure the output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         
-    # The last tile (tile 8) will be our blank space, so we only generate 8 tiles.
+    # the last tile (tile 8) will be our blank space, so only generate 8 tiles.
     for i in range(rows):
         for j in range(cols):
             tile_num = i * cols + j
-            if tile_num == (rows * cols - 1): # Don't generate the last tile
+            if tile_num == (rows * cols - 1): # don't generate the last tile
                 continue
             
             left = j * tile_width
@@ -49,7 +45,7 @@ def slice_image(image_path, output_dir, rows=3, cols=3):
             
             tile = img.crop((left, top, right, bottom))
             
-            # Tile numbers correspond to puzzle state (1-8)
+            # tile numbers correspond to puzzle state (1-8)
             tile_filename = f"tile_{tile_num + 1}.png"
             tile_path = os.path.join(output_dir, tile_filename)
             tile.save(tile_path, 'PNG')
@@ -59,5 +55,5 @@ def slice_image(image_path, output_dir, rows=3, cols=3):
 
 def url_for_static(filepath):
     """A helper to convert a file system path to a static URL path."""
-    # This replaces backslashes with forward slashes for web URLs
+    # replaces backslashes with forward slashes for web URLs
     return filepath.replace('\\', '/').replace('static/', '')
